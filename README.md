@@ -67,11 +67,11 @@ esp32-c3-remote-power-switch/
 
 ```
 ┌────────────────────┐
-│ WiFi:OK            │  line 0 — WiFi status
+│ WiFi:OK            │  line 0 — WiFi status (init / conn... / rtyN / OK / FAIL)
 │ 192.168.1.42       │  line 1 — IP address
-│ MQTT:OK            │  line 2 — MQTT status
-│ T:app/device/evt   │  line 3 — last received topic (truncated)
-│ M:{"data":1}       │  line 4 — last received payload (truncated)
+│ MQTT:OK            │  line 2 — MQTT status (--- / OK / DC / ERR)
+│ Msgs:42            │  line 3 — total MQTT messages received
+│ Errs:3             │  line 4 — total MQTT errors (persists across reconnects)
 └────────────────────┘
 ```
 

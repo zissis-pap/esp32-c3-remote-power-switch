@@ -10,6 +10,7 @@
 
 static const char *TAG = "mqtt";
 static uint32_t s_msg_count = 0;
+static uint32_t s_err_count = 0;
 
 static void event_handler(void *arg, esp_event_base_t base,
                           int32_t id, void *data)
@@ -38,7 +39,6 @@ static void event_handler(void *arg, esp_event_base_t base,
 
     case MQTT_EVENT_DISCONNECTED:
         ESP_LOGW(TAG, "Disconnected");
-        s_msg_count = 0;
         display_set_mqtt("MQTT:DC");
         display_set_topic("");
         display_set_msg("");
@@ -56,25 +56,30 @@ static void event_handler(void *arg, esp_event_base_t base,
                  event->topic_len, event->topic,
                  event->data_len,  event->data);
 
-        char count_str[16];
+        char count_str[16], err_str[16];
         snprintf(count_str, sizeof(count_str), "Msgs:%" PRIu32, ++s_msg_count);
+        snprintf(err_str,   sizeof(err_str),   "Errs:%" PRIu32, s_err_count);
         display_set_topic(count_str);
-        display_set_msg("");
+        display_set_msg(err_str);
         display_refresh();
         led_blink_once();
         break;
     }
 
-    case MQTT_EVENT_ERROR:
+    case MQTT_EVENT_ERROR: {
         ESP_LOGE(TAG, "Error");
-        if (event->error_handle->error_type == MQTT_ERROR_TYPE_TCP_TRANSPORT) 
+        if (event->error_handle->error_type == MQTT_ERROR_TYPE_TCP_TRANSPORT)
         {
             ESP_LOGE(TAG, "  TCP errno=%d",
                      event->error_handle->esp_transport_sock_errno);
         }
+        char err_str[16];
+        snprintf(err_str, sizeof(err_str), "Errs:%" PRIu32, ++s_err_count);
         display_set_mqtt("MQTT:ERR");
+        display_set_msg(err_str);
         display_refresh();
         break;
+    }
 
     default:
         break;
@@ -85,8 +90,9 @@ void mqtt_manager_init(void)
 {
     esp_mqtt_client_config_t cfg = 
     {
-        .broker.address.uri = MQTT_BROKER_URI,
-        .buffer.size        = MQTT_BUFFER_SIZE,
+        .broker.address.uri    = MQTT_BROKER_URI,
+        .buffer.size           = MQTT_BUFFER_SIZE,
+        .session.keepalive     = 60,   // send PINGREQ every 60 s to keep connection alive
         .credentials = {
             .client_id               = MQTT_CLIENT_ID,
             .username                = (strlen(MQTT_USERNAME) ? MQTT_USERNAME : NULL),
