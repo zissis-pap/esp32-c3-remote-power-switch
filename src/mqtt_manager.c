@@ -1,6 +1,7 @@
 #include "mqtt_manager.h"
 #include "display_state.h"
 #include "led.h"
+#include "power_switch.h"
 #include "config.h"
 
 #include <string.h>
@@ -43,22 +44,6 @@ static void log_json_node(const cJSON *node, int depth)
         }
         node = node->next;
     }
-}
-
-static void log_json_payload(const char *data, int dlen)
-{
-    char *buf = malloc(dlen + 1);
-    if (!buf) { ESP_LOGW(TAG, "  (malloc failed)"); return; }
-    memcpy(buf, data, dlen);
-    buf[dlen] = '\0';
-
-    cJSON *root = cJSON_Parse(buf);
-    free(buf);
-
-    if (!root) { ESP_LOGW(TAG, "  (invalid JSON)"); return; }
-
-    log_json_node(root->child, 1);
-    cJSON_Delete(root);
 }
 
 // Push updated counters to display line 3
@@ -110,7 +95,24 @@ static void event_handler(void *arg, esp_event_base_t base,
     {
         ESP_LOGI(TAG, "── MQTT message ──────────────────────");
         ESP_LOGI(TAG, "  topic:   %.*s", event->topic_len, event->topic);
-        log_json_payload(event->data, event->data_len);
+
+        char *payload = malloc(event->data_len + 1);
+        if (payload) {
+            memcpy(payload, event->data, event->data_len);
+            payload[event->data_len] = '\0';
+            cJSON *root = cJSON_Parse(payload);
+            free(payload);
+            if (root) {
+                log_json_node(root->child, 1);
+                power_switch_handle(root);
+                cJSON_Delete(root);
+            } else {
+                ESP_LOGW(TAG, "  (invalid JSON)");
+            }
+        } else {
+            ESP_LOGW(TAG, "  (malloc failed)");
+        }
+
         ESP_LOGI(TAG, "──────────────────────────────────────");
 
         ++s_msg_count;

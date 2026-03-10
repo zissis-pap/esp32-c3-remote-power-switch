@@ -38,5 +38,9 @@
 #define I2C_FREQ_HZ         400000
 #define OLED_I2C_ADDR       0x3C
 
+// Power switch output GPIOs (set HIGH on boot; LOW = switch ON)
+#define POWER_SWITCH_1_GPIO  3
+#define POWER_SWITCH_2_GPIO  4
+
 // UART output (USB Serial/JTAG on GPIO18/GPIO19)
 // Configured via sdkconfig.defaults — ESP_LOG goes through USB Serial/JTAG

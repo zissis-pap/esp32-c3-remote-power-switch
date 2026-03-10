@@ -11,6 +11,7 @@
 #include "ssd1306.h"
 #include "display_state.h"
 #include "led.h"
+#include "power_switch.h"
 #include "wifi_manager.h"
 #include "mqtt_manager.h"
 
@@ -45,6 +46,7 @@ void app_main(void)
     ESP_ERROR_CHECK(ret);
 
     led_init();
+    power_switch_init();
     i2c_init();
 
     ssd1306_init(I2C_PORT, OLED_I2C_ADDR);
