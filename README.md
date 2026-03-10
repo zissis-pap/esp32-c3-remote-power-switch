@@ -70,9 +70,23 @@ esp32-c3-remote-power-switch/
 │ WiFi:OK            │  line 0 — WiFi status (init / conn... / rtyN / OK / FAIL)
 │ 192.168.1.42       │  line 1 — IP address
 │ MQTT:OK            │  line 2 — MQTT status (--- / OK / DC / ERR)
-│ Msgs:42            │  line 3 — total MQTT messages received
-│ Errs:3             │  line 4 — total MQTT errors (persists across reconnects)
+│ M:42 E:3           │  line 3 — message and error counters (persist across reconnects)
+│ M:42 E:3           │  line 4 — (empty)
 └────────────────────┘
+```
+
+Full JSON payloads are recursively parsed and logged to UART, regardless of topic or schema:
+```
+I mqtt: ── MQTT message ──────────────────────
+I mqtt:   topic:   application/1/device/abc123/event/up
+I mqtt:   deviceInfo:
+I mqtt:     deviceName       my-sensor
+I mqtt:     devEui           0123456789abcdef
+I mqtt:   fCnt:              42
+I mqtt:   object:
+I mqtt:     temperature      23.5
+I mqtt:     humidity         61.2
+I mqtt: ──────────────────────────────────────
 ```
 
 ---
