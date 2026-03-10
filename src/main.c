@@ -8,6 +8,8 @@
 #include "driver/i2c.h"
 
 #include "config.h"
+#include "runtime_config.h"
+#include "setup_dialog.h"
 #include "ssd1306.h"
 #include "display_state.h"
 #include "led.h"
@@ -54,6 +56,9 @@ void app_main(void)
     display_refresh();
 
     led_blink_once();   // signal boot
+
+    runtime_config_load_defaults();
+    setup_dialog_run();
 
     wifi_manager_init();
 

@@ -1,5 +1,6 @@
 #include "wifi_manager.h"
 #include "display_state.h"
+#include "runtime_config.h"
 #include "config.h"
 
 #include <string.h>
@@ -70,13 +71,10 @@ void wifi_manager_init(void)
     ESP_ERROR_CHECK(esp_event_handler_instance_register(
         IP_EVENT, IP_EVENT_STA_GOT_IP, &event_handler, NULL, NULL));
 
-    wifi_config_t wifi_cfg = {
-        .sta = {
-            .ssid               = WIFI_SSID,
-            .password           = WIFI_PASSWORD,
-            .threshold.authmode = WIFI_AUTH_WPA2_PSK,
-        },
-    };
+    wifi_config_t wifi_cfg = { 0 };
+    snprintf((char *)wifi_cfg.sta.ssid,     sizeof(wifi_cfg.sta.ssid),     "%s", g_cfg.wifi_ssid);
+    snprintf((char *)wifi_cfg.sta.password, sizeof(wifi_cfg.sta.password), "%s", g_cfg.wifi_password);
+    wifi_cfg.sta.threshold.authmode = WIFI_AUTH_WPA2_PSK;
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     ESP_ERROR_CHECK(esp_wifi_set_config(WIFI_IF_STA, &wifi_cfg));
     ESP_ERROR_CHECK(esp_wifi_start());

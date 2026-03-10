@@ -2,6 +2,7 @@
 #include "display_state.h"
 #include "led.h"
 #include "power_switch.h"
+#include "runtime_config.h"
 #include "config.h"
 
 #include <string.h>
@@ -72,12 +73,8 @@ static void event_handler(void *arg, esp_event_base_t base,
         display_refresh();
         led_blink_once();
 
-        const char *topics[] = MQTT_TOPICS;
-        for (int i = 0; i < MQTT_TOPIC_COUNT; i++)
-        {
-            int msg_id = esp_mqtt_client_subscribe(client, topics[i], MQTT_QOS);
-            ESP_LOGI(TAG, "Subscribed '%s', msg_id=%d", topics[i], msg_id);
-        }
+        int msg_id = esp_mqtt_client_subscribe(client, g_cfg.mqtt_topic, MQTT_QOS);
+        ESP_LOGI(TAG, "Subscribed '%s', msg_id=%d", g_cfg.mqtt_topic, msg_id);
         break;
     }
 
@@ -149,13 +146,13 @@ void mqtt_manager_init(void)
 {
     esp_mqtt_client_config_t cfg =
     {
-        .broker.address.uri    = MQTT_BROKER_URI,
+        .broker.address.uri    = g_cfg.mqtt_broker_uri,
         .buffer.size           = MQTT_BUFFER_SIZE,
         .session.keepalive     = 60,
         .credentials = {
             .client_id               = MQTT_CLIENT_ID,
-            .username                = (strlen(MQTT_USERNAME) ? MQTT_USERNAME : NULL),
-            .authentication.password = (strlen(MQTT_PASSWORD) ? MQTT_PASSWORD : NULL),
+            .username                = (strlen(g_cfg.mqtt_username) ? g_cfg.mqtt_username : NULL),
+            .authentication.password = (strlen(g_cfg.mqtt_password) ? g_cfg.mqtt_password : NULL),
         },
     };
 
@@ -163,5 +160,5 @@ void mqtt_manager_init(void)
     ESP_ERROR_CHECK(esp_mqtt_client_register_event(client, ESP_EVENT_ANY_ID,
                                                    event_handler, NULL));
     ESP_ERROR_CHECK(esp_mqtt_client_start(client));
-    ESP_LOGI(TAG, "Client started, broker=%s", MQTT_BROKER_URI);
+    ESP_LOGI(TAG, "Client started, broker=%s", g_cfg.mqtt_broker_uri);
 }

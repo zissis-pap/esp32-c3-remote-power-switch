@@ -40,28 +40,52 @@ void power_switch_init(void)
     update_display();
 }
 
-void power_switch_handle(const cJSON *root)
+// Apply a single channel state and drive the GPIO.
+static bool apply(int ch, const char *status_str)
 {
-    const cJSON *sw = cJSON_GetObjectItem(root, "switch");
-    const cJSON *st = cJSON_GetObjectItem(root, "status");
-
-    if (!cJSON_IsString(sw) || !cJSON_IsString(st)) return;
-
-    int  ch = atoi(sw->valuestring);
-    bool on = (strcmp(st->valuestring, "ON") == 0);
-
+    bool on = (strcmp(status_str, "ON") == 0);
     if (ch == 1) {
         s_p1_on = on;
         gpio_set_level(POWER_SWITCH_1_GPIO, on ? 0 : 1);
         ESP_LOGI(TAG, "P1 (GPIO%d) -> %s", POWER_SWITCH_1_GPIO, on ? "ON (LOW)" : "OFF (HIGH)");
+        return true;
     } else if (ch == 2) {
         s_p2_on = on;
         gpio_set_level(POWER_SWITCH_2_GPIO, on ? 0 : 1);
         ESP_LOGI(TAG, "P2 (GPIO%d) -> %s", POWER_SWITCH_2_GPIO, on ? "ON (LOW)" : "OFF (HIGH)");
-    } else {
-        ESP_LOGW(TAG, "Unknown switch value: \"%s\"", sw->valuestring);
-        return;
+        return true;
+    }
+    ESP_LOGW(TAG, "Unknown channel: %d", ch);
+    return false;
+}
+
+void power_switch_handle(const cJSON *root)
+{
+    bool updated = false;
+
+    // Explicit two-key format: {"switch1": "ON", "switch2": "OFF"}
+    const cJSON *sw1 = cJSON_GetObjectItem(root, "switch1");
+    const cJSON *sw2 = cJSON_GetObjectItem(root, "switch2");
+    if (cJSON_IsString(sw1)) updated |= apply(1, sw1->valuestring);
+    if (cJSON_IsString(sw2)) updated |= apply(2, sw2->valuestring);
+
+    // Walk the raw linked list to catch every "switch"/"status" pair, including
+    // duplicate keys (e.g. {"switch":"1","status":"ON","switch":"2","status":"ON"}).
+    // cJSON_GetObjectItem only returns the first match, so we must walk manually.
+    const cJSON *node = root->child;
+    while (node != NULL) {
+        if (cJSON_IsString(node) && node->string &&
+            strcmp(node->string, "switch") == 0) {
+            const cJSON *next = node->next;
+            if (next && cJSON_IsString(next) && next->string &&
+                strcmp(next->string, "status") == 0) {
+                updated |= apply(atoi(node->valuestring), next->valuestring);
+                node = next->next;
+                continue;
+            }
+        }
+        node = node->next;
     }
 
-    update_display();
+    if (updated) update_display();
 }
