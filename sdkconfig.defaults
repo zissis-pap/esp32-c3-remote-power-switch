@@ -1,0 +1,8 @@
+# sdkconfig.defaults — applied on a clean build (before sdkconfig.esp32-c3-devkitc-02)
+#
+# Console: keep UART0 as primary and USB Serial/JTAG (GPIO18/GPIO19) as secondary.
+# The existing sdkconfig already has CONFIG_ESP_CONSOLE_SECONDARY_USB_SERIAL_JTAG=y
+# which mirrors all ESP_LOG output to the USB port — no change needed here.
+
+# MQTT
+CONFIG_MQTT_TASK_STACK_SIZE=6144
