@@ -20,6 +20,7 @@
 #define MQTT_PASSWORD       ""
 #define MQTT_CLIENT_ID      "esp32c3-power-switch"
 #define MQTT_QOS            0
+#define MQTT_BUFFER_SIZE    4096    // bytes — increase for large JSON payloads
 
 // Topics to subscribe to (add/remove as needed)
 #define MQTT_TOPICS         { "home/power/switch" }
