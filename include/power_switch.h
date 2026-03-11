@@ -12,10 +12,10 @@ void power_switch_init(void);
 /**
  * Parse a JSON object and drive GPIO3/GPIO4 accordingly.
  *
- * Supported formats:
+ * Format:  {"switch": "1", "status": "ON"}
  *
- *   Single channel:  {"switch": "1", "status": "ON"}
- *   Both channels:   {"switch1": "ON", "switch2": "OFF"}
+ * To control both channels in one message, repeat the key pair:
+ *   {"switch": "1", "status": "ON", "switch": "2", "status": "OFF"}
  *
  * ON  → GPIO driven LOW
  * OFF → GPIO driven HIGH

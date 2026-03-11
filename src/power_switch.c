@@ -63,15 +63,10 @@ void power_switch_handle(const cJSON *root)
 {
     bool updated = false;
 
-    // Explicit two-key format: {"switch1": "ON", "switch2": "OFF"}
-    const cJSON *sw1 = cJSON_GetObjectItem(root, "switch1");
-    const cJSON *sw2 = cJSON_GetObjectItem(root, "switch2");
-    if (cJSON_IsString(sw1)) updated |= apply(1, sw1->valuestring);
-    if (cJSON_IsString(sw2)) updated |= apply(2, sw2->valuestring);
-
-    // Walk the raw linked list to catch every "switch"/"status" pair, including
-    // duplicate keys (e.g. {"switch":"1","status":"ON","switch":"2","status":"ON"}).
-    // cJSON_GetObjectItem only returns the first match, so we must walk manually.
+    // Walk the raw linked list to catch every "switch"/"status" pair.
+    // cJSON_GetObjectItem only returns the first match for a given key, so
+    // repeated keys (e.g. {"switch":"1","status":"ON","switch":"2","status":"ON"})
+    // must be handled by traversing the linked list manually.
     const cJSON *node = root->child;
     while (node != NULL) {
         if (cJSON_IsString(node) && node->string &&

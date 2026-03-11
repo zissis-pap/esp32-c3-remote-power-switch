@@ -144,21 +144,11 @@ Send a JSON message to the subscribed MQTT topic. Two formats are supported:
 
 ### Both channels in one message
 
-Two formats are accepted:
-
-**Repeated `switch`/`status` pairs** (duplicate keys — cJSON linked list is walked manually so both pairs are processed):
+Repeat the `switch`/`status` pair. The parser walks the raw cJSON linked list so all pairs are processed even though the key `"switch"` appears twice:
 
 ```json
 {"switch": "1", "status": "ON", "switch": "2", "status": "ON"}
 ```
-
-**Explicit `switch1`/`switch2` keys** (standard valid JSON):
-
-```json
-{"switch1": "ON", "switch2": "OFF"}
-```
-
-Either or both channel keys may be present; only the channels included in the message are updated.
 
 ### Examples
 
@@ -168,18 +158,28 @@ Either or both channel keys may be present; only the channels included in the me
 {"switch": "2", "status": "ON"}    // GPIO4 LOW  — P2 on
 {"switch": "2", "status": "OFF"}   // GPIO4 HIGH — P2 off
 
-{"switch": "1", "status": "ON", "switch": "2", "status": "ON"}   // both on
-{"switch": "1", "status": "OFF", "switch": "2", "status": "OFF"} // both off
-{"switch": "1", "status": "ON", "switch": "2", "status": "OFF"}  // P1 on, P2 off
-
-{"switch1": "ON",  "switch2": "ON"}   // both on
-{"switch1": "OFF", "switch2": "OFF"}  // both off
-{"switch1": "ON",  "switch2": "OFF"}  // P1 on, P2 off
+{"switch": "1", "status": "ON",  "switch": "2", "status": "ON"}   // both on
+{"switch": "1", "status": "OFF", "switch": "2", "status": "OFF"}  // both off
+{"switch": "1", "status": "ON",  "switch": "2", "status": "OFF"}  // P1 on, P2 off
 ```
 
 > **Note:** JSON requires double quotes. Single-quoted payloads will be rejected.
 
 The OLED line 4 updates immediately to reflect the new state.
+
+UART log for a both-channel message:
+
+```
+I mqtt: ── MQTT message ──────────────────────
+I mqtt:   topic:   switch
+I mqtt:     switch           1
+I mqtt:     status           ON
+I mqtt:     switch           2
+I mqtt:     status           ON
+I mqtt: ──────────────────────────────────────
+I pwr:  P1 (GPIO3) -> ON (LOW)
+I pwr:  P2 (GPIO4) -> ON (LOW)
+```
 
 ---
 
